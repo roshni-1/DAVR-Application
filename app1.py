@@ -246,7 +246,7 @@ def perform_sentiment_analysis(file):
     return f"Sentiment: {sentiment} (Score: {sentiment_score})"
 
 def generate_visualization_dashboard(file, file_type):
-    """Generate visualization dashboard for the uploaded file."""
+    # visualization dashboard for the uploaded file
     if file_type == 'CSV':
         df = pd.read_csv(file)
         visualizations = {}
