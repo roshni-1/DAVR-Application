@@ -148,10 +148,10 @@ def perform_predictive_analysis(file, target_variable, model_type):
         # Read CSV file into a DataFrame
         df = pd.read_csv(file)
 
-        # Extract the list of columns
+        # extract the list of columns
         columns = df.columns.tolist()
 
-        # Prepare features and target variables
+        # prepare features and target variables
         features = df.drop(columns=[target_variable])
         target = df[target_variable]
 
