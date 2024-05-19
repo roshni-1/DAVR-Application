@@ -108,6 +108,7 @@ def perform_descriptive_analysis(file, file_type):
         return {'text_analysis': None, 'numeric_analysis': None}
 
 def perform_text_analysis(df):
+    #text analysis
     return "Performing text analysis..."
 
 def perform_numeric_analysis(df):
@@ -115,7 +116,7 @@ def perform_numeric_analysis(df):
     return "Performing numeric analysis..."
 
 def perform_text_analysis_from_text(text):
-    """Perform text analysis on a given text."""
+   # text analysis on a given text
     tokens = word_tokenize(text)
     stop_words = set(stopwords.words('english'))
     filtered_tokens = [word for word in tokens if word.lower() not in stop_words and word.isalnum()]
