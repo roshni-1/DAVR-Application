@@ -30,22 +30,24 @@ Sentiment analysis.
 Named entity recognition (NER).
 Topic modeling (e.g., LDA).
 Keyword extraction.
-PDF Analysis:
+PDF Analysis
 Text extraction from PDF files.
 Basic text analysis (e.g., word frequency, summarization).
-Handling Missing Values:
+Handling Missing Values
 Identify missing values in the dataset.
 Imputation strategies (e.g., mean, median, mode, forward fill, backward fill, interpolation).
-Advanced Visualization:
+Advanced Visualization
 Support for various types of charts (e.g., line charts, scatter plots, bar charts, pie charts, heatmap, etc.).
 2D and 3D visualizations.
 Interactive visualizations using libraries like Plotly.
-Error Handling:
+Error Handling
 Handle errors gracefully during file upload, analysis, and visualization.
 Provide informative error messages to the user.
-Efficiency and Scalability:
+Efficiency and Scalability
 Optimize code for performance to handle large datasets efficiently.
 Ensure scalability to handle a large number of concurrent users.
 
+# Basic Flowchart of Application 
 
+![Flowchart 1](https://github.com/roshni-1/DAVR-Application/blob/main/Flowchart.png)
 
