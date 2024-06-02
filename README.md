@@ -7,9 +7,8 @@ Features: File upload, detecting outliers, missing values, descriptive statistic
 To create an application that can  perform various types of analysis on any type of file and format, we'll need to implement a wide range of functionalities. Here's a comprehensive list of features we can include in the backend:
 
 File Type Detection: Determine the type of file uploaded by the user (e.g., CSV, TXT, PDF, Excel, etc.).
-Descriptive Analysis:
-Basic statistics (mean, median, mode, variance, standard deviation, etc.).
-EDA
+Descriptive Analysis: Basic statistics (mean, median, mode, variance, standard deviation, etc.).
+Exploratory Data Analysis  
 Time series analysis (if applicable  on the data)
 prescriptive analysis
 casual analysis
@@ -17,13 +16,13 @@ Histograms, box plots, pie charts, pair plots, line chart, area chart, column ch
 Frequency distributions, word clouds, and other visualizations for text data.
 Outlier detection and handling.
 Correlation analysis between variables.
-Predictive Analysis:
+Predictive Analysis
 Regression analysis for continuous target variables.
 Classification analysis for categorical target variables.
 Decision tree modeling for both regression and classification.
 Gradient boosting modeling for both regression and classification.
 Model evaluation metrics (e.g., MSE, accuracy, precision, recall, F1-score).
-Text Analysis:
+Text Analysis
 Word frequency analysis.
 Text summarization.
 Sentiment analysis.
