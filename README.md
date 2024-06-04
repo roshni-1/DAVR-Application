@@ -3,7 +3,6 @@ An application for automatically analyzing, visualizing and generating reports o
 
 Features: File upload, detecting outliers, missing values, descriptive statistics, predective modelling, tokenization and stopword removal, word frequency analysis, extracting keywords, names entity recognition(NER), Topic Modelling(LDA), Sentiment analysis etc  
 
-# Application development under process !! Stay tunned
 To create an application that can  perform various types of analysis on any type of file and format, we'll need to implement a wide range of functionalities. Here's a comprehensive list of features included in the backend:
 
 - File Type Detection: Determine the type of file uploaded by the user (e.g., CSV, TXT, PDF, Excel, etc.).
@@ -48,5 +47,15 @@ Ensure scalability to handle a large number of concurrent users.
 
 # Basic Flowchart of Application 
 
+### Mindmap Diagram
+![Mindmap Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/mindmap.png "Mindmap Diagram")
+### Mermaid Diagram 
 ![Mermaid Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/mermaid%20diagram.png "Mermaid Diagram")
+### Software Architecture 
+![Software Architecture Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/software%20architecture.png "Software Architecture Diagram")
+### Sequence Diagram
+![Sequence Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/sequence%20diagram.png"Sequence Diagram")
+### Activity Diagram
+![Activity Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/activity%20diagram.png "Activity Diagram")
 
+# Application development under process !! Stay tunned
