@@ -49,12 +49,16 @@ Ensure scalability to handle a large number of concurrent users.
 
 ### Mindmap Diagram
 ![Mindmap Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/mindmap.png "Mindmap Diagram")
+
 ### Mermaid Diagram 
 ![Mermaid Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/mermaid%20diagram.png "Mermaid Diagram")
+
 ### Software Architecture 
 ![Software Architecture Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/software%20architecture.png "Software Architecture Diagram")
+
 ### Sequence Diagram
-![Sequence Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/sequence%20diagram.png"Sequence Diagram")
+![Sequence Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/sequence%20diagram.png "Sequence Diagram")
+
 ### Activity Diagram
 ![Activity Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/activity%20diagram.png "Activity Diagram")
 
