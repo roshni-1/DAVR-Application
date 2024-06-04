@@ -48,6 +48,5 @@ Ensure scalability to handle a large number of concurrent users.
 
 # Basic Flowchart of Application 
 
-![Flowchart 1](https://github.com/roshni-1/DAVR-Application/blob/main/Flowchart.png)
-![Software Architecture](https://github.com/roshni-1/DAVR-Application/blob/main/software%20architecture.png)
+![Mermaid Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/mermaid%20diagram.png "Mermaid Diagram")
 
