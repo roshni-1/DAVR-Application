@@ -1,352 +1,242 @@
-# Importing required libraries
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, jsonify
+import os
 import pandas as pd
 import numpy as np
-from textblob import TextBlob
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.probability import FreqDist
 import matplotlib.pyplot as plt
 import seaborn as sns
-import io
-import base64
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
-import magic
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import mean_squared_error, accuracy_score, precision_score, recall_score, f1_score
 from wordcloud import WordCloud
-from werkzeug.utils import secure_filename
-import os
+from PyPDF2 import PdfFileReader
+import magic
+import re
+from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy import stats
+from sklearn.impute import SimpleImputer
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-# Initializing Flask app
+
+
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
 
-# Helper Functions
 
-def detect_file_type(file):
-    # Detecting the type of the uploaded file using MIME type
-    mime = magic.Magic(mime=True)
-    file_mime_type = mime.from_buffer(file.read(1024))
-    file.seek(0)  # Reset file pointer after reading
-    if 'csv' in file_mime_type:
-        return 'CSV'
-    elif 'text' in file_mime_type:
-        return 'TXT'
-    elif 'pdf' in file_mime_type:
-        return 'PDF'
-    else:
-        raise ValueError('Unsupported file type')
 
-def get_analysis_options(file_type):
-    # analysis options based on file type
-    if file_type == 'CSV':
-        return ['Descriptive Analysis', 'Predictive Analysis', 'Visualization Dashboard']
-    elif file_type == 'TXT':
-        return ['Text Summarization', 'Sentiment Analysis', 'Visualization Dashboard']
-    elif file_type == 'PDF':
-        return ['PDF Analysis', 'Visualization Dashboard']
-    else:
-        return ['Visualization Dashboard']
+def upload_file(file):
+    if file.filename == '':
+        raise Exception("No file selected")
+    file_path = os.path.join('uploads', file.filename)
+    file.save(file_path)
+    return file_path
 
-def perform_descriptive_analysis(file, file_type):
-    #Perform descriptive analysis on the uploaded file
-    if file_type == 'CSV':
-        df = pd.read_csv(file)
-        text_columns, numeric_columns = [], []
 
-        for column in df.columns:
-            if df[column].dtype == 'object':
-                text_columns.append(column)
-            elif df[column].dtype in ['int64', 'float64']:
-                numeric_columns.append(column)
+# Descriptive Analysis
+def descriptive_analysis(data):
+    return data.describe()
 
-        analysis_result = {}
 
-        if text_columns:
-            text_analysis_result = perform_text_analysis(df[text_columns])
-            analysis_result['text_analysis'] = text_analysis_result
+# Exploratory Data Analysis
+def exploratory_data_analysis(data):
+    numerical_cols = data.select_dtypes(include=np.number).columns.tolist()
+    categorical_cols = data.select_dtypes(include=np.object).columns.tolist()
+    for col in numerical_cols:
+        plt.figure(figsize=(8, 6))
+        sns.histplot(data[col], kde=True)
+        plt.title(f'Histogram of {col}')
+        plt.xlabel(col)
+        plt.ylabel('Frequency')
+        plt.show()
+    for col in categorical_cols:
+        plt.figure(figsize=(8, 6))
+        sns.countplot(data[col])
+        plt.title(f'Countplot of {col}')
+        plt.xlabel(col)
+        plt.ylabel('Count')
+        plt.xticks(rotation=45)
+        plt.show()
 
-        if numeric_columns:
-            numeric_analysis_result = perform_numeric_analysis(df[numeric_columns])
-            analysis_result['numeric_analysis'] = numeric_analysis_result
 
-            outlier_info = {}
-            for column in numeric_columns:
-                q1, q3 = df[column].quantile(0.25), df[column].quantile(0.75)
-                iqr = q3 - q1
-                lower_bound, upper_bound = q1 - 1.5 * iqr, q3 + 1.5 * iqr
-                outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)][column]
-                outlier_info[column] = outliers.tolist()
-            analysis_result['outliers'] = outlier_info
+# Casual Analysis
+def casual_analysis(data):
+        # For example, let's say we want to perform a correlation analysis between variables
+        correlation_matrix = data.corr()
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+        plt.title('Correlation Matrix')
+        plt.show()
+    pass
 
-            correlation_matrix = df.corr()
-            analysis_result['correlation_matrix'] = correlation_matrix.to_html()
 
-            missing_values_info = {}
-            for column in df.columns:
-                missing_count = df[column].isnull().sum()
-                if missing_count > 0:
-                    missing_values_info[column] = missing_count
-            analysis_result['missing_values'] = missing_values_info
-
-        return analysis_result
-
-    elif file_type == 'TXT':
-        text = file.read().decode('utf-8')
-        if text.isdigit():
-            numeric_analysis_result = perform_numeric_analysis_from_text(text)
-            return {'numeric_analysis': numeric_analysis_result, 'text_analysis': None}
+# Prescriptive Analysis
+def prescriptive_analysis(data):
+    # For example, let's say we want to suggest actions based on certain conditions in the data
+    if 'sales' in data.columns and 'advertising_cost' in data.columns:
+        # If advertising cost is high and sales are low, suggest reducing advertising expenses
+        low_sales_high_advertising = data[
+            (data['sales'] < data['sales'].mean()) & (data['advertising_cost'] > data['advertising_cost'].mean())]
+        if not low_sales_high_advertising.empty:
+            print(
+                "Recommendation: Consider reducing advertising expenses as sales are low compared to high advertising costs.")
         else:
-            text_analysis_result = perform_text_analysis_from_text(text)
-            return {'text_analysis': text_analysis_result, 'numeric_analysis': None}
-
-    elif file_type == 'PDF':
-        # Placeholder for PDF analysis
-        return {'text_analysis': None, 'numeric_analysis': None}
-
+            print("Recommendation: No specific action recommended based on current data.")
     else:
-        return {'text_analysis': None, 'numeric_analysis': None}
-
-def perform_text_analysis(df):
-    #text analysis
-    return "Performing text analysis..."
-
-def perform_numeric_analysis(df):
-    #numeric analysis
-    return "Performing numeric analysis..."
-
-def perform_text_analysis_from_text(text):
-   # text analysis on a given text
-    tokens = word_tokenize(text)
-    stop_words = set(stopwords.words('english'))
-    filtered_tokens = [word for word in tokens if word.lower() not in stop_words and word.isalnum()]
-
-    word_freq = FreqDist(filtered_tokens)
-    keywords = [word for word, freq in word_freq.most_common(5)]
-
-    blob = TextBlob(text)
-    named_entities = blob.noun_phrases
-
-    vectorizer = TfidfVectorizer(max_features=1000, lowercase=True, stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform([text])
-    lda = LatentDirichletAllocation(n_components=5, random_state=42)
-    lda.fit(tfidf_matrix)
-    topics = []
-    for topic_idx, topic in enumerate(lda.components_):
-        top_words = [vectorizer.get_feature_names_out()[i] for i in topic.argsort()[:-5 - 1:-1]]
-        topics.append(top_words)
-
-    summary = blob.sentences[:10]
-    return {'keywords': keywords, 'named_entities': named_entities, 'topics': topics, 'summary': summary}
-
-def perform_numeric_analysis_from_text(text):
-    """Perform numeric analysis if the text contains numeric data."""
-    return "Performing numeric analysis from text file content..."
-
-def perform_predictive_analysis(file, target_variable, model_type):
-    if file_type == 'CSV':
-        # Read CSV file into a DataFrame
-        df = pd.read_csv(file)
-
-        # extract the list of columns
-        columns = df.columns.tolist()
-
-        # prepare features and target variables
-        features = df.drop(columns=[target_variable])
-        target = df[target_variable]
-
-        # Train the selected model
-        if model_type == 'Regression':
-            model = train_regression_model(features, target)
-        elif model_type == 'Classification':
-            model = train_classification_model(features, target)
-        elif model_type == 'Decision Tree':
-            model = train_decision_tree_model(features, target)
-        elif model_type == 'Gradient Boosting':
-            model = train_gradient_boosting_model(features, target)
-        else:
-            model = None
-
-        # Evaluate the model
-        evaluation_result = evaluate_model(model, features, target)
-
-        return {'columns': columns, 'model': model, 'evaluation_result': evaluation_result}
+        print("Prescriptive analysis can't be performed as required columns are not present in the data.")
+    pass
 
 
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, accuracy_score
-
-
-def train_regression_model(features, target):
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
-
-    # Train the linear regression model
+# Predictive Analysis
+def regression_analysis(X_train, y_train, X_test, y_test):
     model = LinearRegression()
     model.fit(X_train, y_train)
-
-    return model
-
-
-def train_classification_model(features, target):
-    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
-
-    # Train the logistic regression model
-    model = LogisticRegression()
-    model.fit(X_train, y_train)
-
-    return model
-
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-
-def train_decision_tree_model(features, target, regression=True):
-    if regression:
-        model = DecisionTreeRegressor()
-    else:
-        model = DecisionTreeClassifier()
-    model.fit(features, target)
-    return model
-
-from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
-
-def train_gradient_boosting_model(features, target, regression=True):
-    if regression:
-        model = GradientBoostingRegressor()
-    else:
-        model = GradientBoostingClassifier()
-    model.fit(features, target)
-    return model
+    y_pred = model.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    return mse
 
 
-def evaluate_model(model, features, target):
-    y_pred = model.predict(features)
-   if isinstance(model, LinearRegression):
-        mse = mean_squared_error(target, y_pred)
-        return {'mse': mse}
-    elif isinstance(model, LogisticRegression):
-        accuracy = accuracy_score(target, y_pred)
-        return {'accuracy': accuracy}
-    else:
-        return {}
+def classification_analysis(X_train, y_train, X_test, y_test):
+    models = {
+        'Decision Tree': DecisionTreeClassifier(),
+        'Random Forest': RandomForestClassifier(),
+        'Gradient Boosting': GradientBoostingClassifier()
+    }
+    results = {}
+    for name, model in models.items():
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, average='weighted')
+        recall = recall_score(y_test, y_pred, average='weighted')
+        f1 = f1_score(y_test, y_pred, average='weighted')
+        results[name] = {'Accuracy': accuracy, 'Precision': precision, 'Recall': recall, 'F1 Score': f1}
+    return results
 
 
-def perform_text_summarization(file):
-    text = file.read().decode('utf-8')
-    blob = TextBlob(text)
-    summary = ' '.join(blob.sentences[:10])
-    return summary
+# Text Analysis
+def word_frequency_analysis(text):
+    words = re.findall(r'\b\w+\b', text)
+    word_freq = Counter(words)
+    return word_freq
 
-def perform_sentiment_analysis(file):
-    text = file.read().decode('utf-8')
-    blob = TextBlob(text)
-    sentiment_score = blob.sentiment.polarity
-    sentiment = 'Positive' if sentiment_score > 0 else 'Negative' if sentiment_score < 0 else 'Neutral'
-    return f"Sentiment: {sentiment} (Score: {sentiment_score})"
 
-def generate_visualization_dashboard(file, file_type):
-    # visualization dashboard for the uploaded file
-    if file_type == 'CSV':
-        df = pd.read_csv(file)
-        visualizations = {}
-        numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
-        for column in numeric_columns:
-            plt.figure(figsize=(8, 6))
-            sns.histplot(data=df, x=column, kde=True)
-            plt.title(f'Histogram of {column}')
-            plt.xlabel(column)
-            plt.ylabel('Frequency')
-            img = io.BytesIO()
-            plt.savefig(img, format='png')
-            img.seek(0)
-            visualizations[f'{column}_histogram'] = base64.b64encode(img.getvalue()).decode()
-            plt.close()
+def sentiment_analysis(text):
+    analyzer = SentimentIntensityAnalyzer()
+    sentiment_score = analyzer.polarity_scores(text)
+    return sentiment_score
 
-        text_columns = df.select_dtypes(include='object').columns
-        for column in text_columns:
-            text = ' '.join(df[column].dropna().tolist())
-            plt.figure(figsize=(8, 6))
-            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
-            plt.imshow(wordcloud, interpolation='bilinear')
-            plt.title(f'Word Cloud of {column}')
-            plt.axis('off')
-            img = io.BytesIO()
-            plt.savefig(img, format='png')
-            img.seek(0)
-            visualizations[f'{column}_wordcloud'] = base64.b64encode(img.getvalue()).decode()
-            plt.close()
 
-        return render_template('visualization_dashboard.html', visualizations=visualizations)
+# PDF Analysis
+def extract_text_from_pdf(pdf_file):
+    text = ""
+    with open(pdf_file, 'rb') as f:
+        pdf_reader = PdfFileReader(f)
+        for page_num in range(pdf_reader.numPages):
+            page = pdf_reader.getPage(page_num)
+            text += page.extractText()
+    return text
 
-    elif file_type == 'TXT':
-        return 'Visualization dashboard for text files is not yet implemented.'
 
-    elif file_type == 'PDF':
-        return 'Visualization dashboard for PDF files is not yet implemented.'
 
-    else:
-        return 'Invalid file type.'
+def handle_missing_values(data, strategy='mean'):
+    imputer = SimpleImputer(strategy=strategy)
+    imputed_data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
+    return imputed_data
 
-# Routes
-@app.route('/')
+
+
+def generate_wordcloud(text):
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+    plt.figure(figsize=(10, 8))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.show()
+
+
+
+class FileFormatError(Exception):
+    pass
+
+
+
+def analyze_file(file):
+    try:
+        
+        file_path = upload_file(file)
+
+        
+        file_type = magic.Magic(mime=True)
+        mime_type = file_type.from_file(file_path)
+
+        
+        if 'text' in mime_type:
+            with open(file_path, 'r') as f:
+                data = f.read()
+        elif 'csv' in mime_type:
+            data = pd.read_csv(file_path)
+        elif 'excel' in mime_type:
+            data = pd.read_excel(file_path)
+        elif 'pdf' in mime_type:
+            data = extract_text_from_pdf(file_path)
+        else:
+            raise FileFormatError("Unsupported file format")
+
+        
+        if isinstance(data, pd.DataFrame):
+            data = data.convert_dtypes()
+
+        # Descriptive Analysis
+        descriptive_result = descriptive_analysis(data)
+
+        # Exploratory Data Analysis
+        exploratory_data_analysis(data)
+
+        # Casual Analysis
+        casual_analysis(data)
+
+        
+        prescriptive_analysis(data)
+
+        
+        if isinstance(data, pd.DataFrame):
+            X = data.drop(columns=['target'])
+            y = data['target']
+            
+            train_size = int(0.8 * len(data))
+            X_train, X_test = X[:train_size], X[train_size:]
+            y_train, y_test = y[:train_size], y[train_size:]
+            regression_result = regression_analysis(X_train, y_train, X_test, y_test)
+            classification_result = classification_analysis(X_train, y_train, X_test, y_test)
+
+        if isinstance(data, str):
+            word_freq = word_frequency_analysis(data)
+            sentiment_result = sentiment_analysis(data)
+
+
+        imputed_data = handle_missing_values(data)
+
+       
+        if isinstance(data, str):
+            generate_wordcloud(data)
+
+        # Error Handling
+    except FileFormatError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        file = request.files['file']
+        analyze_file(file)
+        return render_template('result.html')
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
 
-    file = request.files['file']
-
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
-
-    filename = secure_filename(file.filename)
-
-    try:
-        file_type = detect_file_type(file)
-        analysis_options = get_analysis_options(file_type)
-        return render_template('analysis_options.html', file_type=file_type, analysis_options=analysis_options)
-    except Exception as e:
-        flash(f'Error: {str(e)}')
-        return redirect(request.url)
-
-@app.route('/analyze', methods=['POST'])
-def analyze_file():
-    try:
-        file_type = request.form['file_type']
-        analysis_type = request.form['analysis_type']
-        file = request.files['file']
-
-        if analysis_type == 'Descriptive Analysis':
-            result = perform_descriptive_analysis(file, file_type)
-            visualization_dashboard = generate_visualization_dashboard(file, file_type)
-            return render_template('analysis_results.html', result=result, visualization_dashboard=visualization_dashboard)
-        elif analysis_type == 'Predictive Analysis':
-            result = perform_predictive_analysis(file, file_type)
-            visualization_dashboard = generate_visualization_dashboard(file, file_type)
-            return render_template('analysis_results.html', result=result, visualization_dashboard=visualization_dashboard)
-        elif analysis_type == 'Text Summarization':
-            result = perform_text_summarization(file)
-            return render_template('analysis_results.html', result=result)
-        elif analysis_type == 'Sentiment Analysis':
-            result = perform_sentiment_analysis(file)
-            return render_template('analysis_results.html', result=result)
-        elif analysis_type == 'Visualization Dashboard':
-            visualization_dashboard = generate_visualization_dashboard(file, file_type)
-            return render_template('visualization_dashboard.html', visualization_dashboard=visualization_dashboard)
-        else:
-            flash('Invalid analysis type')
-            return redirect(url_for('index'))
-    except Exception as e:
-        flash(f'Error: {str(e)}')
-        return redirect(url_for('index'))
-
-# Run the Flask app
 if __name__ == '__main__':
     app.run(debug=True)
-
-
