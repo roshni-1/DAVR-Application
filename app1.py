@@ -26,7 +26,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 app = Flask(__name__)
 
 
-
+# File upload 
 def upload_file(file):
     if file.filename == '':
         raise Exception("No file selected")
