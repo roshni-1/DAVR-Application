@@ -62,4 +62,4 @@ Ensure scalability to handle a large number of concurrent users.
 ### Activity Diagram
 ![Activity Diagram](https://github.com/roshni-1/DAVR-Application/blob/main/activity%20diagram.png "Activity Diagram")
 
-# Application development under process !! Stay tunned
+# Application development under process !! Stay tunned. 
